@@ -414,6 +414,12 @@ table.ref{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 @media (max-width:620px){#v-progresso .srcf{position:static;align-self:flex-start;margin:0 0 3px}}
 @media (max-width:620px){.npcform{grid-template-columns:repeat(2,minmax(0,1fr))}.npcform .npcnm{grid-column:1/-1}#npcName{min-width:0;flex:1}}
+
+.blanktip{display:flex;align-items:center;gap:12px;max-width:1300px;margin:14px auto 0;padding:12px 16px;border:1px solid var(--acc);border-radius:14px;background:linear-gradient(110deg,var(--paper),var(--soft));font-size:13.5px;color:var(--ink)}
+.blanktip[hidden]{display:none}
+.blanktip>.ms{font-size:24px;color:var(--acc);flex:0 0 auto}
+.blanktip>div{flex:1}
+@media (max-width:620px){.blanktip{margin:10px 10px 0;flex-wrap:wrap}.blanktip button{flex-basis:100%}}
 </style>
 </head>
 <body>
@@ -447,6 +453,7 @@ table.ref{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 <main>
 <div class="topbar"><button type="button" class="iconbtn" id="mToggle" aria-label="Abrir ferramentas"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><b id="topTitle">Makimono NSC</b><button type="button" class="iconbtn qtop" data-qopen aria-label="Busca rápida"><span class="ms">search</span></button></div>
+<div class="blanktip" id="blankTip" hidden><span class="ms">badge</span><div><b>Você está usando uma ficha em branco.</b> Importe a sua ficha do fórum para que os testes, ataques e o progresso usem os seus números.</div><button type="button" class="pri sm" data-go="fichas">Importar minha ficha</button></div>
 
 <!-- ============ ATAQUE ============ -->
 <div class="view" id="v-ataque">
@@ -1398,14 +1405,15 @@ function traitFromName(nm){var k=String(nm||'').toLowerCase().normalize('NFD').r
 function traitEffects(p,tags){var t=traitsOf(p),out=[];Object.keys(t).forEach(function(id){var lv=n(t[id]);if(!lv)return;var b=BONUS_ALL[id];if(!b)return;(b.e||[]).forEach(function(ef,i){if(!ef[0].some(function(g){return g==='all'||tags.indexOf(g)>=0}))return;var v=Array.isArray(ef[1])?ef[1][Math.min(ef[1].length,lv)-1]:ef[1];var o2=(p.traitOpt||{})[id];out.push({id:id+':'+i,src:b.k,v:v,why:ef[2]+(o2?' ('+o2+')':''),opt:!!ef[3],name:b.n+(o2?' ('+o2+')':'')})})});return out}
 
 /* ================= fichas (perfis, editor, importação) ================= */
-var DEF={traits:{},traitOpt:{},for:2,des:3,con:1,vel:2,per:3,int:2,fv:1,cch:1,conv:1,car:0,nin:3,tai:3,gen:0,weapon:'normal',projBase:10,wpnCustom:0,potencia:true,kenjutsu:true,shuriken:false,contencao:false,fortitude:false,tenacidade:false,hpMax:300,ckMax:300,enMax:300,mpMax:300};
-DEF.name='Momochi Seiran (exemplo)';DEF.jutsus=[{name:'Kirigakure no Jutsu',rank:'B',art:'Ninjutsu',type:'Suplementar',range:'25 m',cost:'30 CK',cd:'1',req:'Clã Momochi',desc:'Névoa espessa: dentro dela o usuário fica Furtivo automaticamente. CD −1 pela regra especial.'}];DEF.vert=['kenjutsu','elemental'];DEF.clan='Momochi';DEF.elements=['Suiton'];
+var DEF={traits:{},traitOpt:{},for:1,des:1,con:1,vel:1,per:1,int:1,fv:1,cch:1,conv:1,car:1,nin:1,tai:1,gen:0,weapon:'none',projBase:10,wpnCustom:0,potencia:false,kenjutsu:false,shuriken:false,contencao:false,fortitude:false,tenacidade:false,hpMax:100,ckMax:100,enMax:100,mpMax:100};
+DEF.name='Ficha em branco';DEF.jutsus=[];DEF.vert=[];DEF.clan='';DEF.elements=[];
+var KIRI_J={name:'Kirigakure no Jutsu',rank:'B',art:'Ninjutsu',type:'Suplementar',range:'25 m',cost:'30 CK',cd:'1',req:'Clã Momochi',desc:'Névoa espessa: dentro dela o usuário fica Furtivo automaticamente. CD −1 pela regra especial.'};
 var KEY='nsc-calc-combate-v2';
 var P=null;try{P=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
 if(!P||!P.profiles||!Object.keys(P.profiles).length){P={active:DEF.name,profiles:{}};P.profiles[DEF.name]=clone(DEF)}
 if(!P.profiles[P.active])P.active=Object.keys(P.profiles)[0];
-if(P.profiles[DEF.name]&&!P.mig1){P.profiles[DEF.name].shuriken=false;P.mig1=true}
-Object.keys(P.profiles).forEach(function(k){var p=P.profiles[k];var legacy=!Array.isArray(p.vert);for(var d in DEF)if(!(d in p))p[d]=clone(DEF[d]);if(legacy){p.vert=[];if(p.kenjutsu)p.vert.push('kenjutsu');if(p.shuriken)p.vert.push('shurikenjutsu');if(k!==DEF.name){p.clan=/momochi/i.test(k)?'Momochi':'';p.elements=p.clan==='Momochi'?['Suiton']:[];if(p.clan==='Momochi'&&p.vert.indexOf('elemental')<0)p.vert.push('elemental');if(p.clan==='Momochi'&&!(p.jutsus||[]).some(function(j){return /kirigakure no jutsu/i.test(j.name)}))p.jutsus=(p.jutsus||[]).concat([clone(DEF.jutsus[0])])}}syncLegacy(p);if(!p.name)p.name=k});
+if(!P.mig1){P.mig1=true}
+Object.keys(P.profiles).forEach(function(k){var p=P.profiles[k];var legacy=!Array.isArray(p.vert);for(var d in DEF)if(!(d in p))p[d]=clone(DEF[d]);if(legacy){p.vert=[];if(p.kenjutsu)p.vert.push('kenjutsu');if(p.shuriken)p.vert.push('shurikenjutsu');if(k!==DEF.name){p.clan=/momochi/i.test(k)?'Momochi':'';p.elements=p.clan==='Momochi'?['Suiton']:[];if(p.clan==='Momochi'&&p.vert.indexOf('elemental')<0)p.vert.push('elemental');if(p.clan==='Momochi'&&!(p.jutsus||[]).some(function(j){return /kirigakure no jutsu/i.test(j.name)}))p.jutsus=(p.jutsus||[]).concat([clone(KIRI_J)])}}syncLegacy(p);if(!p.name)p.name=k});
 var s=P.profiles[P.active];
 function syncLegacy(p){p.kenjutsu=hasV(p,'kenjutsu');p.shuriken=hasV(p,'shurikenjutsu')}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}}
@@ -1444,7 +1452,7 @@ if(window.embateRefreshAdd)embateRefreshAdd();}
 function useProf(nm){P.active=nm;s=P.profiles[nm];for(var k in DEF)if(!(k in s))s[k]=clone(DEF[k]);save();renderProf();notifyProfile();}
 document.getElementById('profSel').addEventListener('change',function(){useProf(this.value)});
 document.getElementById('btnImpToggle').addEventListener('click',function(){var c=document.getElementById('impCard');c.hidden=!c.hidden;if(!c.hidden)c.scrollIntoView({behavior:'smooth',block:'start'})});
-document.getElementById('btnNewProf').addEventListener('click',function(){var k=1,nm='Nova ficha';while(P.profiles[nm]){k++;nm='Nova ficha '+k}var p=clone(DEF);ATTR.forEach(function(a){p[a[0]]=1});p.nin=p.tai=p.gen=1;p.potencia=p.kenjutsu=false;p.traits={};p.traitOpt={};p.vert=[];p.clan='';p.elements=[];p.jutsus=[];p.weapon='none';p.name=nm;var oldP=P.profiles[nm];if(oldP&&oldP.prog&&p.prog){p.prog.mis=oldP.prog.mis||p.prog.mis;p.prog.ens=oldP.prog.ens||0;if(!p.prog.grad&&oldP.prog.grad)p.prog.grad=oldP.prog.grad}else if(oldP&&oldP.prog&&!p.prog)p.prog=oldP.prog;P.profiles[nm]=p;useProf(nm);document.getElementById('fName').focus()});
+document.getElementById('btnNewProf').addEventListener('click',function(){var k=1,nm='Nova ficha';while(P.profiles[nm]){k++;nm='Nova ficha '+k}var p=clone(DEF);ATTR.forEach(function(a){p[a[0]]=1});p.nin=p.tai=p.gen=1;p.potencia=p.kenjutsu=false;p.traits={};p.traitOpt={};p.vert=[];p.clan='';p.elements=[];p.jutsus=[];p.weapon='none';p.name=nm;var oldP=P.profiles[nm];if(oldP&&oldP.prog&&p.prog){p.prog.mis=oldP.prog.mis||p.prog.mis;p.prog.ens=oldP.prog.ens||0;if(!p.prog.grad&&oldP.prog.grad)p.prog.grad=oldP.prog.grad}else if(oldP&&oldP.prog&&!p.prog)p.prog=oldP.prog;P.profiles[nm]=p;var bl=P.profiles[DEF.name];if(bl&&nm!==DEF.name&&!(bl.jutsus||[]).length&&!(bl.vert||[]).length&&!bl.clan&&ATTR.every(function(a){return bl[a[0]]===DEF[a[0]]})&&!(bl.combos||[]).length)delete P.profiles[DEF.name];useProf(nm);document.getElementById('fName').focus()});
 function impMsg(t,ok){var e=document.getElementById('impMsg');e.textContent=t;e.style.color=ok?'var(--good)':'var(--warn)';var c=document.getElementById('impCard');if(c.hidden&&!ok){c.hidden=false}}
 
 /* ---------- leitura da ficha ---------- */
@@ -1500,12 +1508,12 @@ p.atqConcOwned=hasName(o.purchased,/Ataque Concentrado/i);
 var inv=(o.inventory||[]).map(function(x){return String(x.name||'')+' '+String(x.description||'')}).join(' ');
 p.wpnCustom=0;p.weapon=/katana|espada|lâmina|tant[oō]|wakizashi/i.test(inv)||/Momochi/i.test(o.clan||'')?'normal':'none';p.projBase=10;
 var st=o.status||{};['hp','ck','en','mp'].forEach(function(k){var v=n(st[k]||o[k]||o[k+'Max']);if(v>0)p[k+'Max']=v});p.statusFound=!!(st.hp||o.hp);
-p.jutsus=(o.jutsus||[]).filter(function(j){return j&&j.name}).map(function(j){return {name:String(j.name),rank:String(j.rank||'E'),art:String(j.art||''),type:String(j.type||''),range:String(j.range||''),cost:String(j.cost||''),cd:String(j.cd||''),req:String(j.requirements||j.req||''),desc:String(j.description||j.desc||'')}});if(p.clan==='Momochi'&&!p.jutsus.some(function(j){return /kirigakure no jutsu/i.test(j.name)}))p.jutsus.push(clone(DEF.jutsus[0]));
+p.jutsus=(o.jutsus||[]).filter(function(j){return j&&j.name}).map(function(j){return {name:String(j.name),rank:String(j.rank||'E'),art:String(j.art||''),type:String(j.type||''),range:String(j.range||''),cost:String(j.cost||''),cd:String(j.cd||''),req:String(j.requirements||j.req||''),desc:String(j.description||j.desc||'')}});if(p.clan==='Momochi'&&!p.jutsus.some(function(j){return /kirigakure no jutsu/i.test(j.name)}))p.jutsus.push(clone(KIRI_J));
 if(o.meta)progFromMeta(p,o);p.name=(o.name||'Ficha importada').trim()||'Ficha importada';return p;}
 function progFromMeta(p,o){var M=o.meta,num=function(x){var v=String(x==null?'':x).replace(/[^\d-]/g,'');return v===''?null:Number(v)};var CI={z:['z',50],alpha:['alpha',0],crystal:['crystal',30],exile:['exilado',100],exilado:['exilado',100],exilio:['exilado',100]};var ck=String(M.ciclo||'').toLowerCase().replace(/[^a-z]/g,''),ci=CI[ck]||null;var gr=String(M.grad||'').toLowerCase(),gk=/acad/.test(gr)?'academia':/tokubetsu/.test(gr)?'tokubetsu':/j[oō]u?nin/.test(gr)?'jounin':/ch[uū]u?nin/.test(gr)?'chunin':/genin/.test(gr)?'genin':'';var pr={ciclo:ci?ci[0]:'z',tot:'',saldo:'',grad:gk,rp:0,mis:{B:0,A:0,S:0},idade:'',lojaA:0,lojaT:0,ens:0,niv:'',exV:0},src=[];if(ci)src.push('ciclo');var tr=num(M.tr),tg=num(M.tg);if(tr!=null){pr.tot=tr;src.push('tot')}if(tr!=null||tg!=null){pr.saldo=Math.max(0,(ci?ci[1]:0)+(tr||0)-(tg||0));src.push('saldo')}if(gk)src.push('grad');var nv=num(M.niv);if(nv!=null&&nv>=0&&nv<=5){pr.niv=nv;src.push('niv')}var ag=num(M.idade);if(ag!=null){pr.idade=ag;src.push('idade')}['exA','exT','exV'].forEach(function(k){var v=num(M[k]);if(v!=null){pr[k==='exA'?'lojaA':k==='exT'?'lojaT':'exV']=v;src.push(k==='exA'?'lojaA':k==='exT'?'lojaT':'exV')}});if(o.rps){pr.rps=o.rps;var lvi=pr.niv!==''?pr.niv:({z:0,crystal:0,alpha:2,exilado:2})[pr.ciclo];pr.rp=n(o.rps[lvi]);src.push('rp')}pr.src=src;pr.srcAt=new Date().toISOString().slice(0,10);p.prog=pr}
 async function doImport(txt,html){
 try{var o=await readAny(txt,html);var p=toProfile(o);var nm=p.name,k=2;while(P.profiles[nm]&&P.profiles[nm]!==s){nm=p.name+' ('+k+')';k++}
-p.name=nm;var oldP=P.profiles[nm];if(oldP&&oldP.prog&&p.prog){p.prog.mis=oldP.prog.mis||p.prog.mis;p.prog.ens=oldP.prog.ens||0;if(!p.prog.grad&&oldP.prog.grad)p.prog.grad=oldP.prog.grad}else if(oldP&&oldP.prog&&!p.prog)p.prog=oldP.prog;P.profiles[nm]=p;useProf(nm);
+p.name=nm;var oldP=P.profiles[nm];if(oldP&&oldP.prog&&p.prog){p.prog.mis=oldP.prog.mis||p.prog.mis;p.prog.ens=oldP.prog.ens||0;if(!p.prog.grad&&oldP.prog.grad)p.prog.grad=oldP.prog.grad}else if(oldP&&oldP.prog&&!p.prog)p.prog=oldP.prog;P.profiles[nm]=p;var bl=P.profiles[DEF.name];if(bl&&nm!==DEF.name&&!(bl.jutsus||[]).length&&!(bl.vert||[]).length&&!bl.clan&&ATTR.every(function(a){return bl[a[0]]===DEF[a[0]]})&&!(bl.combos||[]).length)delete P.profiles[DEF.name];useProf(nm);
 var nAt=[p.potencia?'Potência':'',p.contencao?'Contenção de Chakra':'',p.fortitude?'Fortitude':''].concat(p.vert.map(function(v){return VERTN[v].n})).filter(Boolean).join(', ');
 impMsg('Ficha "'+nm+'" importada: '+p.jutsus.length+' jutsus'+(nAt?' · '+nAt:'')+'. Confira arma, projéteis'+(p.statusFound?'':' e as reservas (Vida, Chakra, Energia, Mente)')+'.',true);document.getElementById('impTxt').value='';}
 catch(e){impMsg(e.message||'Não consegui importar.')}}
@@ -2581,7 +2589,7 @@ if(o.E&&!merge){try{localStorage.setItem('nsc-calc-embate-v1',JSON.stringify(o.E
 save();renderProf();notifyProfile();if(window.embateRefreshAdd)embateRefreshAdd();$('bkTxt').value='';$('bkRest').hidden=true;msg(c+' ficha(s) restaurada(s).')}catch(e){msg('Não reconheci esse backup. Ele precisa começar com NSC_BACKUP: (ou ser o arquivo baixado aqui).',false)}});
 }
 /* ---- sortear nome ---- */
-var NM={m:['Haruto','Daichi','Kaito','Ren','Sora','Takeshi','Ryota','Shin','Kenta','Isamu','Jirō','Masaru','Tetsuya','Hayato','Raiden','Yūma','Goro','Kazuki','Tora','Shōta','Seiran','Kiyoshi','Akio'],f:['Aiko','Hana','Yui','Mei','Rin','Sakura','Ayame','Kaede','Nami','Emi','Hotaru','Chiyo','Kiyomi','Asuka','Suzu','Yuki','Kumiko','Tsubaki','Mio','Natsu','Shizuka']};
+var NM={m:['Haruto','Daichi','Kaito','Ren','Sora','Takeshi','Ryota','Shin','Kenta','Isamu','Jirō','Masaru','Tetsuya','Hayato','Raiden','Yūma','Goro','Kazuki','Tora','Shōta','Kiyoshi','Akio'],f:['Aiko','Hana','Yui','Mei','Rin','Sakura','Ayame','Kaede','Nami','Emi','Hotaru','Chiyo','Kiyomi','Asuka','Suzu','Yuki','Kumiko','Tsubaki','Mio','Natsu','Shizuka']};
 if($('fRandName'))$('fRandName').addEventListener('click',function(){var sx=Math.random()<.5?'m':'f',a=NM[sx],nm=a[Math.floor(Math.random()*a.length)];var full=(s.clan?s.clan+' ':'')+nm;var el=$('fName');el.value=full;el.dispatchEvent(new Event('change',{bubbles:true}))});
 /* ---- requisitos para usar no Ataque ---- */
 function reqs(){var box=$('jReq'),sel=$('jsel');if(!box||!sel)return;var j=s.jutsus&&s.jutsus[+sel.value];if(sel.value===''||!j){box.hidden=true;return}
@@ -2611,12 +2619,14 @@ $('sideToggle').addEventListener('click',toggle);$('mToggle').addEventListener('
 var VIEWS=['ataque','rolls','genjutsu','embate','npcs','fichas','simulador','progresso','biblioteca'],TITLES={ataque:'Ataque e defesa',rolls:'Rolls',genjutsu:'Genjutsu',npcs:'NPCs',progresso:'Progresso',embate:'Embate',fichas:'Fichas',simulador:'Simulador de build',biblioteca:'Biblioteca'};
 function go(v){if(v==='regras')v='biblioteca';if(VIEWS.indexOf(v)<0)v='ataque';VIEWS.forEach(function(x){$('v-'+x).classList.toggle('on',x===v)});if(v==='rolls'&&window.rollsRender)rollsRender();if(v==='genjutsu'&&window.genRender)genRender();if(v==='npcs'&&window.npcRender)npcRender();if(v==='progresso'&&window.progRender)progRender();document.querySelectorAll('#nav a,#bnav a').forEach(function(a){var on=a.getAttribute('data-v')===v;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
 $('topTitle').textContent=TITLES[v];document.title=TITLES[v]+' · Makimono NSC';app.classList.remove('mopen');UI.view=v;saveUI();
-if(v==='simulador'&&window.simEnter)simEnter();if(v==='embate'&&window.embateRender)embateRender();if(v==='ataque'&&window.ataqueCalc)ataqueCalc();window.scrollTo(0,0)}
+blankChk();if(v==='simulador'&&window.simEnter)simEnter();if(v==='embate'&&window.embateRender)embateRender();if(v==='ataque'&&window.ataqueCalc)ataqueCalc();window.scrollTo(0,0)}
 document.querySelectorAll('#nav a').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();var v=a.getAttribute('data-v');try{history.replaceState(null,'','#'+v)}catch(x){}go(v)})});
 document.addEventListener('click',function(e){var b=e.target.closest('[data-go]');if(b){e.preventDefault();go(b.getAttribute('data-go'))}});
 window.goView=function(v){try{history.replaceState(null,'','#'+v)}catch(x){}go(v)};window.addEventListener('hashchange',function(){go(location.hash.slice(1))});
 document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&(e.key==='b'||e.key==='B')){e.preventDefault();toggle()}});
 $('expClose').addEventListener('click',closeExp);$('expBg').addEventListener('click',function(e){if(e.target===this)closeExp()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('expBg').hidden)closeExp()});
+function blankChk(){var b=$('blankTip');if(!b)return;var on=document.querySelector('.view.on');b.hidden=!(typeof s!=='undefined'&&s&&s.name===DEF.name&&!(on&&(on.id==='v-fichas'||on.id==='v-biblioteca')))}
+onProfileChange.push(blankChk);
 renderProf();
 go((location.hash||'').slice(1)||UI.view||'ataque');
 })();
